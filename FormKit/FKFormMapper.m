@@ -339,6 +339,12 @@
     
     id convertedValue = [self convertValueToStringIfNeeded:value attributeMapping:attributeMapping];
     
+    if(attributeMapping.optional && attributeMapping.optionalPropertyEnabledBlock &&[field isKindOfClass: FKSimpleField.class]){
+        if(((FKSimpleField*)field).usageSwitch){
+            [((FKSimpleField*)field).usageSwitch setOn: attributeMapping.optionalPropertyEnabledBlock(self.object, attributeMapping.attribute)];
+        }
+    }
+    
     // Value attribution
     if ([field isKindOfClass:[FKTextField class]]) {
         [(FKTextField *)field textField].text = convertedValue;
@@ -448,6 +454,15 @@
     FKFormAttributeMappingType type = attributeMapping.type;
     Class cellClass = [self cellClassWithAttributeMapping:attributeMapping];
     FKSimpleField *field = [self cellForClass:cellClass];
+    if([field isKindOfClass: FKSimpleField.class]){
+        field.optional = attributeMapping.optional;
+    
+        if(field.usageSwitch){
+            [field.usageSwitch setFormAttributeMapping: attributeMapping];
+            [field.usageSwitch addTarget: self action: @selector(enbaleDisableSwitchFieldValueDidChange:) forControlEvents: UIControlEventValueChanged];
+        }
+    }
+   
     
     if (type == FKFormAttributeMappingTypeText) {
         [[(FKTextField *)field textField] setDelegate:self];
@@ -687,6 +702,15 @@
     [self setValue:[NSNumber numberWithBool:sender.isOn] forAttributeMapping:sender.formAttributeMapping];
 }
 
+
+- (void) enbaleDisableSwitchFieldValueDidChange: (UISwitch*) sender
+{
+    BOOL isOn = [sender isOn];
+    FKFormAttributeMapping* mapping = [sender formAttributeMapping];
+    if(mapping.optionalMappingEnableDisableBlock){
+        mapping.optionalMappingEnableDisableBlock(self.object, mapping.attribute, isOn);
+    }
+}
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 - (void)sliderFieldValueDidChange:(UISlider *)sender {

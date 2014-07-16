@@ -40,6 +40,8 @@
 @property (nonatomic, retain) FKFormMapper *formMapper;
 @property (nonatomic, retain) NSMutableArray *formMappings;
 
+@property (nonatomic, weak) FKFormAttributeMapping *currentPickerMapping;
+
 - (void)showTextViewControllerWithAttributeMapping:(FKFormAttributeMapping *)attributeMapping;
 
 - (void)showSelectPickerWithAttributeMapping:(FKFormAttributeMapping *)attributeMapping;
@@ -619,20 +621,22 @@
     }
     
     __weak FKFormModel *weakRef = self;
-    actionSheetPicker = [ActionSheetDatePicker showPickerWithTitle:attributeMapping.title
-                                                    datePickerMode:datePickerMode
-                                                      selectedDate:[NSDate date]
-                                                         doneBlock:^(ActionSheetDatePicker *picker, NSDate *selectedDate, id origin) {
-                                                             FKFormAttributeMapping *formAttributeMapping = picker.formAttributeMapping;
-                                                             [weakRef.formMapper setValue:selectedDate forAttributeMapping:formAttributeMapping];
-                                                             [weakRef reloadRowWithAttributeMapping:formAttributeMapping];
-                                                         }
-                                                       cancelBlock:nil
-                                                            origin:self.tableView];
+    self.currentPickerMapping = attributeMapping;
+    actionSheetPicker = [ActionSheetDatePicker showPickerWithTitle: attributeMapping.title
+                                                    datePickerMode: datePickerMode
+                                                      selectedDate: [NSDate date]
+                                                            target: self action: @selector(datePicked:withOrigin:) origin: self.tableView];
     
     actionSheetPicker.formAttributeMapping = attributeMapping;
 }
 
+
+- (void) datePicked: (NSDate*) selectedDate withOrigin: (id) origin
+{
+    FKFormAttributeMapping *formAttributeMapping = self.currentPickerMapping;
+    [self.formMapper setValue:selectedDate forAttributeMapping:formAttributeMapping];
+    [self reloadRowWithAttributeMapping:formAttributeMapping];
+}
 
 
 @end

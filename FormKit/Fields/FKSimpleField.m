@@ -25,6 +25,9 @@
 @implementation FKSimpleField
 
 
+@synthesize optional = _optional;
+
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 - (id)initWithStyle:(UITableViewCellStyle)style reuseIdentifier:(NSString *)reuseIdentifier {
     self = [super initWithStyle:style reuseIdentifier:reuseIdentifier];
@@ -42,10 +45,31 @@
 }
 
 
+- (void) setOptional:(BOOL)optional
+{
+    _optional = optional;
+    if(optional){
+        if(self.usageSwitch == nil){
+            self.usageSwitch = [[UISwitch alloc] initWithFrame: CGRectMake(0, 5, 30, 30)];
+        }
+        [self.contentView addSubview: self.usageSwitch];
+        self.xMargin = self.usageSwitch.frame.size.width + 4;
+    }else{
+        if(self.usageSwitch != nil) [self.usageSwitch removeFromSuperview];
+        self.xMargin = 12;
+    }
+}
+
+- (BOOL) optional
+{
+    return _optional;
+}
+
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 - (void)prepareForReuse {
     [super prepareForReuse];
-    
+    if(self.usageSwitch) [self.usageSwitch removeTarget:nil action:NULL forControlEvents:UIControlEventAllEvents];
     self.errorLabel.text = nil;
     self.backgroundColor = [UIColor whiteColor];
 }
@@ -54,6 +78,11 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 - (void)layoutSubviews {
     [super layoutSubviews];
+    
+    CGFloat switchOffset = 0;
+    if(self.optional){
+        switchOffset = self.usageSwitch.frame.size.width;
+    }
     
     CGRect textLabelFrame = self.textLabel.frame;
     textLabelFrame.origin.y = 10;

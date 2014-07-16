@@ -57,3 +57,7 @@ typedef void(^FKFormMappingAttributeConfigurationBlock)(FKFormAttributeMapping *
 typedef void(^FKFormMappingWillDisplayCellWithDataBlock)(UITableViewCell *cell, id object, NSIndexPath *indexPath, id data);
 
 typedef void(^FKFormMappingCellSelectionWithDataBlock)(UITableViewCell *cell, id object, NSIndexPath *indexPath, id data);
+
+typedef void(^FKFormMappingOptionalFieldStatusChangedBlock)(id object, NSString* key, BOOL newEnabledValue);
+
+typedef BOOL(^FKFormMappingOptionalFieldStatusBlock)(id object, NSString* key);

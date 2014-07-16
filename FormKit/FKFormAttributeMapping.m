@@ -30,6 +30,7 @@
     if (self) {
         self.keyboardType = UIKeyboardTypeNumberPad;
         self.hideLabel = NO;
+        self.optional = NO;
         self.textAlignment = NSTextAlignmentLeft;
         self.valueTextAlignment = NSTextAlignmentRight;
         self.clearsOnBeginEditing = NO;

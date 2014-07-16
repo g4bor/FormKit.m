@@ -30,6 +30,7 @@
 - (void)layoutSubviews {
     [super layoutSubviews];
     
+ 
     if (self.textLabel.hidden) {
         self.valueView.frame = CGRectInset(self.bounds, self.xMargin, 0);
         

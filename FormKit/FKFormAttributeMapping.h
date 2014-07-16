@@ -81,6 +81,10 @@ typedef enum {
 @property (nonatomic, assign) CGFloat separatorMargin;
 @property (nonatomic, strong) id blockData;
 
+@property BOOL optional;
+@property (nonatomic, copy) FKFormMappingOptionalFieldStatusChangedBlock optionalMappingEnableDisableBlock;
+@property (nonatomic, copy) FKFormMappingOptionalFieldStatusBlock optionalPropertyEnabledBlock;
+
 /*
  * Convenient method to get an attributeMapping
  */
