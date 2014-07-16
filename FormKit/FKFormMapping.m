@@ -209,7 +209,7 @@
                        selectValuesBlock:(FKFormMappingSelectValueBlock)selectValueBlock
                     valueFromSelectBlock:(FKFormMappingValueFromSelectBlock)valueFromSelectBlock
                          labelValueBlock:(FKFormMappingSelectLabelValueBlock)labelValue {
-    
+
     FKFormAttributeMapping *attributeMapping = [self attributeMappingWithTitle:title
                                                                      attribute:attribute
                                                                           type:FKFormAttributeMappingTypeSelect];
@@ -222,6 +222,25 @@
     return attributeMapping;
 }
 
+
+- (FKFormAttributeMapping *)mapAttribute:(NSString *)attribute
+                                   title:(NSString *)title
+                            showInPicker:(BOOL)showInPicker
+                       multiSelectValuesBlock:(FKFormMappingMultiSelectValueBlock) selectValueBlock
+                    valueFromMultiSelectBlock:(FKFormMappingValueFromSelectBlock) valueFromSelectBlock
+                         labelValueBlock:(FKFormMappingSelectLabelValueBlock)labelValue
+{
+
+    FKFormAttributeMapping *attributeMapping = [self attributeMappingWithTitle:title
+                                                                     attribute:attribute
+                                                                          type:FKFormAttributeMappingTypeMultiSelect];
+    
+    attributeMapping.multiSelectValuesBlock = selectValueBlock;
+    attributeMapping.valueFromSelectBlock = valueFromSelectBlock;
+    attributeMapping.labelValueBlock = labelValue;
+    attributeMapping.showInPicker = showInPicker;    
+    return attributeMapping;
+}
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 - (FKFormAttributeMapping *)mapCustomCell:(Class)cell

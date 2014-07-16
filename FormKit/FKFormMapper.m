@@ -411,12 +411,14 @@
         return _formMapping.buttonFieldClass;
         
     } else if ((type == FKFormAttributeMappingTypeSelect && attributeMapping.showInPicker) ||
+               (type == FKFormAttributeMappingTypeMultiSelect && attributeMapping.showInPicker) ||
                type == FKFormAttributeMappingTypeTime ||
                type == FKFormAttributeMappingTypeDate ||
                type == FKFormAttributeMappingTypeDateTime) {
         return _formMapping.labelFieldClass;
         
-    } else if (type == FKFormAttributeMappingTypeSelect && !attributeMapping.showInPicker) {
+    } else if ((type == FKFormAttributeMappingTypeSelect && !attributeMapping.showInPicker) ||
+               (type == FKFormAttributeMappingTypeMultiSelect && attributeMapping.showInPicker)) {
         return _formMapping.disclosureIndicatorAccessoryField;
         
     } else if (type == FKFormAttributeMappingTypeBigText) {
@@ -476,11 +478,13 @@
     } else if (type == FKFormAttributeMappingTypeButton) {
         
     } else if ((type == FKFormAttributeMappingTypeSelect && attributeMapping.showInPicker) ||
+               (type == FKFormAttributeMappingTypeMultiSelect && attributeMapping.showInPicker) ||
                type == FKFormAttributeMappingTypeTime ||
                type == FKFormAttributeMappingTypeDate ||
                type == FKFormAttributeMappingTypeDateTime) {
         
-    } else if (type == FKFormAttributeMappingTypeSelect && !attributeMapping.showInPicker) {
+    } else if ((type == FKFormAttributeMappingTypeSelect && !attributeMapping.showInPicker) ||
+               (type == FKFormAttributeMappingTypeMultiSelect && attributeMapping.showInPicker)){
         
     } else if (type == FKFormAttributeMappingTypeBigText) {
         
@@ -499,6 +503,11 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 - (id)convertValueToStringIfNeeded:(id)value attributeMapping:(FKFormAttributeMapping *)attributeMapping {
     id convertedValue = value;
+    
+    //labelValueBlock is mandatory for Select and multiselect fields
+    if(attributeMapping.labelValueBlock != nil){
+        return attributeMapping.labelValueBlock(value, self.object);
+    }
     
     if (attributeMapping.type == FKFormAttributeMappingTypeInteger) {
         NSInteger integerValue = [(NSNumber *)value integerValue];
@@ -521,9 +530,6 @@
             convertedValue = [value description];
         }
         
-    } else if (attributeMapping.type == FKFormAttributeMappingTypeSelect) {
-        convertedValue = attributeMapping.labelValueBlock(value, self.object);
-        
     }
     
     return convertedValue;
@@ -533,6 +539,11 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 - (id)convertValueToObjectPropertyTypeIfNeeded:(NSString*)value attributeMapping:(FKFormAttributeMapping *)attributeMapping {
     id convertedValue = value;
+    
+    // label value block is optional for overwriting label behavior, but mandatory for select fields
+    if(attributeMapping.labelValueBlock != nil){
+        return attributeMapping.labelValueBlock(value, self.object);
+    }
     
     if (attributeMapping.type == FKFormAttributeMappingTypeInteger) {
         NSInteger integerValue = [value integerValue];
@@ -555,11 +566,6 @@
         } else {
             convertedValue = [formatter dateFromString:value];
         }
-        
-        
-    } else if (attributeMapping.type == FKFormAttributeMappingTypeSelect) {
-        convertedValue = attributeMapping.labelValueBlock(value, self.object);
-        
     }
     
     return convertedValue;
