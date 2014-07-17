@@ -238,7 +238,8 @@
     attributeMapping.multiSelectValuesBlock = selectValueBlock;
     attributeMapping.valueFromSelectBlock = valueFromSelectBlock;
     attributeMapping.labelValueBlock = labelValue;
-    attributeMapping.showInPicker = showInPicker;    
+    attributeMapping.showInPicker = showInPicker;
+    attributeMapping.accesoryType = UITableViewCellAccessoryDisclosureIndicator;
     return attributeMapping;
 }
 

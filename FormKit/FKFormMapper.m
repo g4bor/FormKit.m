@@ -424,7 +424,7 @@
         return _formMapping.labelFieldClass;
         
     } else if ((type == FKFormAttributeMappingTypeSelect && !attributeMapping.showInPicker) ||
-               (type == FKFormAttributeMappingTypeMultiSelect && attributeMapping.showInPicker)) {
+               (type == FKFormAttributeMappingTypeMultiSelect && !attributeMapping.showInPicker)) {
         return _formMapping.disclosureIndicatorAccessoryField;
         
     } else if (type == FKFormAttributeMappingTypeBigText) {

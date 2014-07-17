@@ -42,6 +42,8 @@
 
 @property (nonatomic, weak) FKFormAttributeMapping *currentPickerMapping;
 
+@property (nonatomic, retain) UIPopoverController* multiPickerPopoover;
+
 - (void)showTextViewControllerWithAttributeMapping:(FKFormAttributeMapping *)attributeMapping;
 
 - (void)showSelectPickerWithAttributeMapping:(FKFormAttributeMapping *)attributeMapping;
@@ -503,6 +505,7 @@
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 - (void)showSelectPickerWithAttributeMapping:(FKFormAttributeMapping *)attributeMapping {
+
     if(attributeMapping.type == FKFormAttributeMappingTypeSelect){
         __weak FKFormModel *weakRef = self;
         ActionStringDoneBlock done = ^(ActionSheetStringPicker *picker, NSInteger selectedIndex, id selectedValue) {
@@ -523,6 +526,12 @@
                                                        origin:(nil == self.viewOrigin) ? self.tableView : self.viewOrigin];
         picker.formAttributeMapping = attributeMapping;
     }else if(attributeMapping.type == FKFormAttributeMappingTypeMultiSelect){
+        
+        if([[UIDevice currentDevice] userInterfaceIdiom] == UIUserInterfaceIdiomPad){
+            //no popover for phones !!!
+            [self showSelectWithAttributeMapping: attributeMapping];
+            return;
+        }
         __weak FKFormModel *weakRef = self;
         BWSelectViewController *vc = [[self.selectControllerClass alloc] init];
         //Multiselect
@@ -533,8 +542,39 @@
             [indexPaths addObject: [NSIndexPath indexPathForRow: idx inSection: 0]];
         }];
         [vc setSlectedIndexPaths: indexPaths];
+        [vc setFormAttributeMapping:attributeMapping];
+
+        [vc setDidSelectBlock:^(NSArray *selectedIndexPaths, BWSelectViewController *controller) {
+            NSIndexPath *selectedIndexPath = [selectedIndexPaths lastObject];
+            NSUInteger selectedIndex = selectedIndexPath.row;
+            id selectedValue = [controller.items objectAtIndex:selectedIndex];
+            id currentValue = [self.object valueForKey: attributeMapping.attribute];
+            FKFormAttributeMapping *formAttributeMapping = controller.formAttributeMapping;
+            id value = formAttributeMapping.valueFromSelectBlock(selectedValue, self.object, selectedIndex);
+            id newValue;
+            if([currentValue containsObject: value]){
+                newValue = [currentValue filteredArrayUsingPredicate: [NSPredicate predicateWithBlock:^BOOL(id evaluatedObject, NSDictionary *bindings) {
+                    return ![evaluatedObject isEqual: value];
+                }]];
+            }else{
+                if(currentValue == nil){
+                    newValue = [NSArray arrayWithObject: value];
+                }else{
+                    newValue = [currentValue arrayByAddingObject: value];
+                }
+            }
+            
+            [weakRef.formMapper setValue: newValue forAttributeMapping:formAttributeMapping];
+            [weakRef reloadRowWithAttributeMapping:formAttributeMapping];
+        }];
         vc.allowEmpty = YES;
         vc.multiSelection = YES;
+        self.multiPickerPopoover = [[UIPopoverController alloc] initWithContentViewController:vc];
+        [self.multiPickerPopoover presentPopoverFromRect:self.tableView.bounds inView:self.tableView
+        permittedArrowDirections:UIPopoverArrowDirectionAny animated:YES];
+        
+        
+        
     }
     
     
@@ -596,7 +636,6 @@
             
             [weakRef.formMapper setValue: newValue forAttributeMapping:formAttributeMapping];
             [weakRef reloadRowWithAttributeMapping:formAttributeMapping];
-           // [controller.navigationController popViewControllerAnimated:YES];
         }];
         
 

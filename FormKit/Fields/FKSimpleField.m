@@ -53,7 +53,7 @@
             self.usageSwitch = [[UISwitch alloc] initWithFrame: CGRectMake(0, 5, 30, 30)];
         }
         [self.contentView addSubview: self.usageSwitch];
-        self.xMargin = self.usageSwitch.frame.size.width + 4;
+        self.xMargin = self.usageSwitch.frame.size.width + 6;
     }else{
         if(self.usageSwitch != nil) [self.usageSwitch removeFromSuperview];
         self.xMargin = 12;
