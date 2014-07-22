@@ -527,7 +527,7 @@
         picker.formAttributeMapping = attributeMapping;
     }else if(attributeMapping.type == FKFormAttributeMappingTypeMultiSelect){
         
-        if([[UIDevice currentDevice] userInterfaceIdiom] == UIUserInterfaceIdiomPad){
+        if([[UIDevice currentDevice] userInterfaceIdiom] == UIUserInterfaceIdiomPhone){
             //no popover for phones !!!
             [self showSelectWithAttributeMapping: attributeMapping];
             return;
