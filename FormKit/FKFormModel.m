@@ -615,26 +615,23 @@
 
         __weak FKFormModel *weakRef = self;
         [vc setDidSelectBlock:^(NSArray *selectedIndexPaths, BWSelectViewController *controller) {
-            NSIndexPath *selectedIndexPath = [selectedIndexPaths lastObject];
-            NSUInteger selectedIndex = selectedIndexPath.row;
-            id selectedValue = [controller.items objectAtIndex:selectedIndex];
-            id currentValue = [self.object valueForKey: attributeMapping.attribute];
+
             FKFormAttributeMapping *formAttributeMapping = controller.formAttributeMapping;
-            id value = formAttributeMapping.valueFromSelectBlock(selectedValue, self.object, selectedIndex);
-            id newValue;
-            if([currentValue containsObject: value]){
-                newValue = [currentValue filteredArrayUsingPredicate: [NSPredicate predicateWithBlock:^BOOL(id evaluatedObject, NSDictionary *bindings) {
-                    return ![evaluatedObject isEqual: value];
-                }]];
+            if(selectedIndexPaths.count == 0){
+                [weakRef.formMapper setValue: @[] forAttributeMapping: formAttributeMapping];
             }else{
-                if(currentValue == nil){
-                    newValue = [NSArray arrayWithObject: value];
-                }else{
-                    newValue = [currentValue arrayByAddingObject: value];
-                }
+                NSArray* selectedIndices = [selectedIndexPaths valueForKey: @"row"];
+                
+                NSMutableArray* newValue = [NSMutableArray arrayWithCapacity: selectedIndices.count];
+                
+                [selectedIndices enumerateObjectsUsingBlock:^(id obj, NSUInteger idx, BOOL *stop) {
+                    id value = formAttributeMapping.valueFromSelectBlock(nil, self.object, [obj integerValue]);
+                    [newValue addObject: value];
+                }];
+                [weakRef.formMapper setValue: newValue forAttributeMapping:formAttributeMapping];
             }
             
-            [weakRef.formMapper setValue: newValue forAttributeMapping:formAttributeMapping];
+
             [weakRef reloadRowWithAttributeMapping:formAttributeMapping];
         }];
         
@@ -659,7 +656,6 @@
         datePickerMode = UIDatePickerModeDateAndTime;
     }
     
-    __weak FKFormModel *weakRef = self;
     self.currentPickerMapping = attributeMapping;
     actionSheetPicker = [ActionSheetDatePicker showPickerWithTitle: attributeMapping.title
                                                     datePickerMode: datePickerMode
