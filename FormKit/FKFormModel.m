@@ -548,7 +548,7 @@
             NSIndexPath *selectedIndexPath = [selectedIndexPaths lastObject];
             NSUInteger selectedIndex = selectedIndexPath.row;
             id selectedValue = [controller.items objectAtIndex:selectedIndex];
-            id currentValue = [self.object valueForKey: attributeMapping.attribute];
+            id currentValue = [self.object valueForKeyPath: attributeMapping.attribute];
             FKFormAttributeMapping *formAttributeMapping = controller.formAttributeMapping;
             id value = formAttributeMapping.valueFromSelectBlock(selectedValue, self.object, selectedIndex);
             id newValue;

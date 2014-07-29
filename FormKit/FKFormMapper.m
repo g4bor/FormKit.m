@@ -595,6 +595,12 @@
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 - (id)valueOfObjectForKeyPath:(NSString *)keyPath {
+    
+    if(keyPath == nil){
+        NSLog(@"Error FormKitFormMapping nil keyPath object name %@",
+              keyPath, NSStringFromClass([self.object class]));
+        return nil;
+    }
     id value = nil;
     
     @try {
