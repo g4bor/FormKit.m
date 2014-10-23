@@ -30,12 +30,15 @@
 - (void)layoutSubviews {
     [super layoutSubviews];
     
+ 
     if (self.textLabel.hidden) {
         self.valueView.frame = CGRectInset(self.bounds, self.xMargin, 0);
-        
     } else {
+        CGFloat switchOffset = 0;
+        if(self.usageSwitch && !self.usageSwitch.isHidden) switchOffset = self.usageSwitch.frame.size.width;
+
         self.valueView.frame = CGRectMake(self.textLabel.frame.origin.x + self.textLabel.frame.size.width + 20, self.textLabel.frame.origin.y,
-                                          self.contentView.frame.size.width - self.textLabel.frame.size.width - 40, self.textLabel.frame.size.height);
+                                          self.contentView.frame.size.width - self.textLabel.frame.size.width - switchOffset - 40, self.textLabel.frame.size.height);
     }
 }
 

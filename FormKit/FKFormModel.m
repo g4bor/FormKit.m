@@ -40,6 +40,10 @@
 @property (nonatomic, retain) FKFormMapper *formMapper;
 @property (nonatomic, retain) NSMutableArray *formMappings;
 
+@property (nonatomic, weak) FKFormAttributeMapping *currentPickerMapping;
+
+@property (nonatomic, retain) UIPopoverController* multiPickerPopoover;
+
 - (void)showTextViewControllerWithAttributeMapping:(FKFormAttributeMapping *)attributeMapping;
 
 - (void)showSelectPickerWithAttributeMapping:(FKFormAttributeMapping *)attributeMapping;
@@ -138,13 +142,14 @@
     [[self.tableView.superview fk_findFirstResponder] resignFirstResponder];
     
     FKFormAttributeMapping *attributeMapping = [self.formMapper attributeMappingAtIndexPath:indexPath];
-    
-    if (nil != attributeMapping.selectValuesBlock) {
-        if (attributeMapping.showInPicker)
+
+    if (attributeMapping.type == FKFormAttributeMappingTypeSelect ||
+        attributeMapping.type == FKFormAttributeMappingTypeMultiSelect) {
+        if (attributeMapping.showInPicker){
             [self showSelectPickerWithAttributeMapping:attributeMapping];
-        else
+        }else{
             [self showSelectWithAttributeMapping:attributeMapping];
-        
+        }
     } else if (nil != attributeMapping.saveBtnHandler) {
         attributeMapping.saveBtnHandler();
         
@@ -500,49 +505,141 @@
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 - (void)showSelectPickerWithAttributeMapping:(FKFormAttributeMapping *)attributeMapping {
-    __weak FKFormModel *weakRef = self;
-    ActionStringDoneBlock done = ^(ActionSheetStringPicker *picker, NSInteger selectedIndex, id selectedValue) {
-        FKFormAttributeMapping *formAttributeMapping = picker.formAttributeMapping;
-        id value = formAttributeMapping.valueFromSelectBlock(selectedValue, self.object, selectedIndex);
-        [weakRef.formMapper setValue:value forAttributeMapping:formAttributeMapping];
-        [weakRef reloadRowWithAttributeMapping:formAttributeMapping];
-    };
+
+    if(attributeMapping.type == FKFormAttributeMappingTypeSelect){
+        __weak FKFormModel *weakRef = self;
+        ActionStringDoneBlock done = ^(ActionSheetStringPicker *picker, NSInteger selectedIndex, id selectedValue) {
+            FKFormAttributeMapping *formAttributeMapping = picker.formAttributeMapping;
+            id value = formAttributeMapping.valueFromSelectBlock(selectedValue, self.object, selectedIndex);
+            [weakRef.formMapper setValue:value forAttributeMapping:formAttributeMapping];
+            [weakRef reloadRowWithAttributeMapping:formAttributeMapping];
+        };
+        
+        NSString *value = [self.formMapper valueForAttributeMapping:attributeMapping];
+        NSInteger selectedIndex = 0;
+        ActionSheetStringPicker *picker;
+        picker = [ActionSheetStringPicker showPickerWithTitle:attributeMapping.title
+                                                         rows:attributeMapping.selectValuesBlock(value, self.object, &selectedIndex)
+                                             initialSelection:selectedIndex
+                                                    doneBlock:done
+                                                  cancelBlock:nil
+                                                       origin:(nil == self.viewOrigin) ? self.tableView : self.viewOrigin];
+        picker.formAttributeMapping = attributeMapping;
+    }else if(attributeMapping.type == FKFormAttributeMappingTypeMultiSelect){
+        
+        if([[UIDevice currentDevice] userInterfaceIdiom] == UIUserInterfaceIdiomPhone){
+            //no popover for phones !!!
+            [self showSelectWithAttributeMapping: attributeMapping];
+            return;
+        }
+        __weak FKFormModel *weakRef = self;
+        BWSelectViewController *vc = [[self.selectControllerClass alloc] init];
+        //Multiselect
+        NSMutableIndexSet* indexSet = [NSMutableIndexSet indexSet];
+        vc.items = attributeMapping.multiSelectValuesBlock(nil, self.object, indexSet);
+        NSMutableArray* indexPaths = [NSMutableArray arrayWithCapacity: indexSet.count];
+        [indexSet enumerateIndexesUsingBlock:^(NSUInteger idx, BOOL *stop) {
+            [indexPaths addObject: [NSIndexPath indexPathForRow: idx inSection: 0]];
+        }];
+        [vc setSlectedIndexPaths: indexPaths];
+        [vc setFormAttributeMapping:attributeMapping];
+
+        [vc setDidSelectBlock:^(NSArray *selectedIndexPaths, BWSelectViewController *controller) {
+            NSIndexPath *selectedIndexPath = [selectedIndexPaths lastObject];
+            NSUInteger selectedIndex = selectedIndexPath.row;
+            id selectedValue = [controller.items objectAtIndex:selectedIndex];
+            id currentValue = [self.object valueForKeyPath: attributeMapping.attribute];
+            FKFormAttributeMapping *formAttributeMapping = controller.formAttributeMapping;
+            id value = formAttributeMapping.valueFromSelectBlock(selectedValue, self.object, selectedIndex);
+            id newValue;
+            if([currentValue containsObject: value]){
+                newValue = [currentValue filteredArrayUsingPredicate: [NSPredicate predicateWithBlock:^BOOL(id evaluatedObject, NSDictionary *bindings) {
+                    return ![evaluatedObject isEqual: value];
+                }]];
+            }else{
+                if(currentValue == nil){
+                    newValue = [NSArray arrayWithObject: value];
+                }else{
+                    newValue = [currentValue arrayByAddingObject: value];
+                }
+            }
+            
+            [weakRef.formMapper setValue: newValue forAttributeMapping:formAttributeMapping];
+            [weakRef reloadRowWithAttributeMapping:formAttributeMapping];
+        }];
+        vc.allowEmpty = YES;
+        vc.multiSelection = YES;
+        self.multiPickerPopoover = [[UIPopoverController alloc] initWithContentViewController:vc];
+        [self.multiPickerPopoover presentPopoverFromRect:self.tableView.bounds inView:self.tableView
+        permittedArrowDirections:UIPopoverArrowDirectionAny animated:YES];
+        
+        
+        
+    }
     
-    NSString *value = [self.formMapper valueForAttributeMapping:attributeMapping];
-    NSInteger selectedIndex = 0;
-    ActionSheetStringPicker *picker;
-    picker = [ActionSheetStringPicker showPickerWithTitle:attributeMapping.title
-                                                     rows:attributeMapping.selectValuesBlock(value, self.object, &selectedIndex)
-                                         initialSelection:selectedIndex
-                                                doneBlock:done
-                                              cancelBlock:nil
-                                                   origin:(nil == self.viewOrigin) ? self.tableView : self.viewOrigin];
     
-    picker.formAttributeMapping = attributeMapping;
 }
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 - (void)showSelectWithAttributeMapping:(FKFormAttributeMapping *)attributeMapping {
-    NSInteger selectedIndex = 0;
     BWSelectViewController *vc = [[self.selectControllerClass alloc] init];
-    vc.items = attributeMapping.selectValuesBlock(nil, self.object, &selectedIndex);
-    vc.title = attributeMapping.title;
     vc.formAttributeMapping = attributeMapping;
-    [vc setSlectedIndexPaths:[NSArray arrayWithObject:[NSIndexPath indexPathForRow:selectedIndex inSection:0]]];
+    if(attributeMapping.type == FKFormAttributeMappingTypeSelect){
+        NSInteger selectedIndex = 0;
+        vc.items = attributeMapping.selectValuesBlock(nil, self.object, &selectedIndex);
+        [vc setSlectedIndexPaths:[NSArray arrayWithObject:[NSIndexPath indexPathForRow:selectedIndex inSection:0]]];
+
+        __weak FKFormModel *weakRef = self;
+        [vc setDidSelectBlock:^(NSArray *selectedIndexPaths, BWSelectViewController *controller) {
+            NSIndexPath *selectedIndexPath = [selectedIndexPaths lastObject];
+            NSUInteger selectedIndex = selectedIndexPath.row;
+            id selectedValue = [controller.items objectAtIndex:selectedIndex];
+            FKFormAttributeMapping *formAttributeMapping = controller.formAttributeMapping;
+            id value = formAttributeMapping.valueFromSelectBlock(selectedValue, self.object, selectedIndex);
+            [weakRef.formMapper setValue:value forAttributeMapping:formAttributeMapping];
+            [weakRef reloadRowWithAttributeMapping:formAttributeMapping];
+            [controller.navigationController popViewControllerAnimated:YES];
+        }];
+    }else{
+        //Multiselect
+        NSMutableIndexSet* indexSet = [NSMutableIndexSet indexSet];
+        vc.items = attributeMapping.multiSelectValuesBlock(nil, self.object, indexSet);
+        NSMutableArray* indexPaths = [NSMutableArray arrayWithCapacity: indexSet.count];
+        [indexSet enumerateIndexesUsingBlock:^(NSUInteger idx, BOOL *stop) {
+            [indexPaths addObject: [NSIndexPath indexPathForRow: idx inSection: 0]];
+        }];
+        [vc setSlectedIndexPaths: indexPaths];
+        vc.allowEmpty = YES;
+        vc.multiSelection = YES;
+
+        __weak FKFormModel *weakRef = self;
+        [vc setDidSelectBlock:^(NSArray *selectedIndexPaths, BWSelectViewController *controller) {
+
+            FKFormAttributeMapping *formAttributeMapping = controller.formAttributeMapping;
+            if(selectedIndexPaths.count == 0){
+                [weakRef.formMapper setValue: @[] forAttributeMapping: formAttributeMapping];
+            }else{
+                NSArray* selectedIndices = [selectedIndexPaths valueForKey: @"row"];
+                
+                NSMutableArray* newValue = [NSMutableArray arrayWithCapacity: selectedIndices.count];
+                
+                [selectedIndices enumerateObjectsUsingBlock:^(id obj, NSUInteger idx, BOOL *stop) {
+                    id value = formAttributeMapping.valueFromSelectBlock(nil, self.object, [obj integerValue]);
+                    [newValue addObject: value];
+                }];
+                [weakRef.formMapper setValue: newValue forAttributeMapping:formAttributeMapping];
+            }
+            
+
+            [weakRef reloadRowWithAttributeMapping:formAttributeMapping];
+        }];
+        
+
+    }
+    vc.title = attributeMapping.title;
+
     
-    
-    __weak FKFormModel *weakRef = self;
-    [vc setDidSelectBlock:^(NSArray *selectedIndexPaths, BWSelectViewController *controller) {
-        NSIndexPath *selectedIndexPath = [selectedIndexPaths lastObject];
-        NSUInteger selectedIndex = selectedIndexPath.row;
-        id selectedValue = [controller.items objectAtIndex:selectedIndex];
-        FKFormAttributeMapping *formAttributeMapping = controller.formAttributeMapping;
-        id value = formAttributeMapping.valueFromSelectBlock(selectedValue, self.object, selectedIndex);
-        [weakRef.formMapper setValue:value forAttributeMapping:formAttributeMapping];
-        [weakRef reloadRowWithAttributeMapping:formAttributeMapping];
-        [controller.navigationController popViewControllerAnimated:YES];
-    }];
     
     [self.navigationController pushViewController:vc animated:YES];
 }
@@ -559,21 +656,22 @@
         datePickerMode = UIDatePickerModeDateAndTime;
     }
     
-    __weak FKFormModel *weakRef = self;
-    actionSheetPicker = [ActionSheetDatePicker showPickerWithTitle:attributeMapping.title
-                                                    datePickerMode:datePickerMode
-                                                      selectedDate:[NSDate date]
-                                                         doneBlock:^(ActionSheetDatePicker *picker, NSDate *selectedDate, id origin) {
-                                                             FKFormAttributeMapping *formAttributeMapping = picker.formAttributeMapping;
-                                                             [weakRef.formMapper setValue:selectedDate forAttributeMapping:formAttributeMapping];
-                                                             [weakRef reloadRowWithAttributeMapping:formAttributeMapping];
-                                                         }
-                                                       cancelBlock:nil
-                                                            origin:self.tableView];
+    self.currentPickerMapping = attributeMapping;
+    actionSheetPicker = [ActionSheetDatePicker showPickerWithTitle: attributeMapping.title
+                                                    datePickerMode: datePickerMode
+                                                      selectedDate: [NSDate date]
+                                                            target: self action: @selector(datePicked:withOrigin:) origin: self.tableView];
     
     actionSheetPicker.formAttributeMapping = attributeMapping;
 }
 
+
+- (void) datePicked: (NSDate*) selectedDate withOrigin: (id) origin
+{
+    FKFormAttributeMapping *formAttributeMapping = self.currentPickerMapping;
+    [self.formMapper setValue:selectedDate forAttributeMapping:formAttributeMapping];
+    [self reloadRowWithAttributeMapping:formAttributeMapping];
+}
 
 
 @end

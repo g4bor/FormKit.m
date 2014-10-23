@@ -25,4 +25,8 @@
 @property (nonatomic, strong) UILabel *errorLabel;
 @property (nonatomic, assign) CGFloat xMargin;
 
+@property (nonatomic, retain) UISwitch* usageSwitch;
+
+@property BOOL optional;
+
 @end

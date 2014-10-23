@@ -94,6 +94,15 @@
                     valueFromSelectBlock:(FKFormMappingValueFromSelectBlock)valueFromSelectBlock
                          labelValueBlock:(FKFormMappingSelectLabelValueBlock)labelValue;
 
+- (FKFormAttributeMapping *)mapAttribute:(NSString *)attribute
+                                   title:(NSString *)title
+                            showInPicker:(BOOL)showInPicker
+                  multiSelectValuesBlock:(FKFormMappingMultiSelectValueBlock) selectValueBlock
+               valueFromMultiSelectBlock:(FKFormMappingValueFromSelectBlock) valueFromSelectBlock
+                         labelValueBlock:(FKFormMappingSelectLabelValueBlock)labelValue;
+
+
+
 - (FKFormAttributeMapping *)mapCustomCell:(Class)cell
                                identifier:(NSString *)identifier
                      willDisplayCellBlock:(FKFormMappingWillDisplayCellBlock)willDisplayCellBlock

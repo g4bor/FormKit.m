@@ -25,11 +25,16 @@ typedef NSArray *(^FKFormMappingSelectValueBlock)(id value, id object, NSInteger
 
 typedef id(^FKFormMappingValueFromSelectBlock)(id value, id object, NSInteger selectedValueIndex);
 
+typedef NSArray *(^FKFormMappingMultiSelectValueBlock)(id value, id object, NSMutableIndexSet* selectedValueIndex);
+
+
 typedef void(^FKFormMappingButtonHandlerBlock)(id object);
 
 typedef NSString *(^FKFormMappingDateFormatBlock)();
 
 typedef id (^FKFormMappingSelectLabelValueBlock)(id value, id object);
+
+typedef id (^FKFormMappingLabelForValueBlock)(id value, id object);
 
 typedef void(^FKFormMappingWillDisplayCellBlock)(UITableViewCell *cell, id object, NSIndexPath *indexPath);
 
@@ -52,3 +57,7 @@ typedef void(^FKFormMappingAttributeConfigurationBlock)(FKFormAttributeMapping *
 typedef void(^FKFormMappingWillDisplayCellWithDataBlock)(UITableViewCell *cell, id object, NSIndexPath *indexPath, id data);
 
 typedef void(^FKFormMappingCellSelectionWithDataBlock)(UITableViewCell *cell, id object, NSIndexPath *indexPath, id data);
+
+typedef void(^FKFormMappingOptionalFieldStatusChangedBlock)(id object, NSString* key, BOOL newEnabledValue);
+
+typedef BOOL(^FKFormMappingOptionalFieldStatusBlock)(id object, NSString* key);

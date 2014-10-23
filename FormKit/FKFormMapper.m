@@ -339,6 +339,12 @@
     
     id convertedValue = [self convertValueToStringIfNeeded:value attributeMapping:attributeMapping];
     
+    if(attributeMapping.optional && attributeMapping.optionalPropertyEnabledBlock &&[field isKindOfClass: FKSimpleField.class]){
+        if(((FKSimpleField*)field).usageSwitch){
+            [((FKSimpleField*)field).usageSwitch setOn: attributeMapping.optionalPropertyEnabledBlock(self.object, attributeMapping.attribute)];
+        }
+    }
+    
     // Value attribution
     if ([field isKindOfClass:[FKTextField class]]) {
         [(FKTextField *)field textField].text = convertedValue;
@@ -411,12 +417,14 @@
         return _formMapping.buttonFieldClass;
         
     } else if ((type == FKFormAttributeMappingTypeSelect && attributeMapping.showInPicker) ||
+               (type == FKFormAttributeMappingTypeMultiSelect && attributeMapping.showInPicker) ||
                type == FKFormAttributeMappingTypeTime ||
                type == FKFormAttributeMappingTypeDate ||
                type == FKFormAttributeMappingTypeDateTime) {
         return _formMapping.labelFieldClass;
         
-    } else if (type == FKFormAttributeMappingTypeSelect && !attributeMapping.showInPicker) {
+    } else if ((type == FKFormAttributeMappingTypeSelect && !attributeMapping.showInPicker) ||
+               (type == FKFormAttributeMappingTypeMultiSelect && !attributeMapping.showInPicker)) {
         return _formMapping.disclosureIndicatorAccessoryField;
         
     } else if (type == FKFormAttributeMappingTypeBigText) {
@@ -446,6 +454,15 @@
     FKFormAttributeMappingType type = attributeMapping.type;
     Class cellClass = [self cellClassWithAttributeMapping:attributeMapping];
     FKSimpleField *field = [self cellForClass:cellClass];
+    if([field isKindOfClass: FKSimpleField.class]){
+        field.optional = attributeMapping.optional;
+    
+        if(field.usageSwitch){
+            [field.usageSwitch setFormAttributeMapping: attributeMapping];
+            [field.usageSwitch addTarget: self action: @selector(enbaleDisableSwitchFieldValueDidChange:) forControlEvents: UIControlEventValueChanged];
+        }
+    }
+   
     
     if (type == FKFormAttributeMappingTypeText) {
         [[(FKTextField *)field textField] setDelegate:self];
@@ -476,11 +493,13 @@
     } else if (type == FKFormAttributeMappingTypeButton) {
         
     } else if ((type == FKFormAttributeMappingTypeSelect && attributeMapping.showInPicker) ||
+               (type == FKFormAttributeMappingTypeMultiSelect && attributeMapping.showInPicker) ||
                type == FKFormAttributeMappingTypeTime ||
                type == FKFormAttributeMappingTypeDate ||
                type == FKFormAttributeMappingTypeDateTime) {
         
-    } else if (type == FKFormAttributeMappingTypeSelect && !attributeMapping.showInPicker) {
+    } else if ((type == FKFormAttributeMappingTypeSelect && !attributeMapping.showInPicker) ||
+               (type == FKFormAttributeMappingTypeMultiSelect && attributeMapping.showInPicker)){
         
     } else if (type == FKFormAttributeMappingTypeBigText) {
         
@@ -499,6 +518,11 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 - (id)convertValueToStringIfNeeded:(id)value attributeMapping:(FKFormAttributeMapping *)attributeMapping {
     id convertedValue = value;
+    
+    //labelValueBlock is mandatory for Select and multiselect fields
+    if(attributeMapping.labelValueBlock != nil){
+        return attributeMapping.labelValueBlock(value, self.object);
+    }
     
     if (attributeMapping.type == FKFormAttributeMappingTypeInteger) {
         NSInteger integerValue = [(NSNumber *)value integerValue];
@@ -521,9 +545,6 @@
             convertedValue = [value description];
         }
         
-    } else if (attributeMapping.type == FKFormAttributeMappingTypeSelect) {
-        convertedValue = attributeMapping.labelValueBlock(value, self.object);
-        
     }
     
     return convertedValue;
@@ -533,6 +554,11 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 - (id)convertValueToObjectPropertyTypeIfNeeded:(NSString*)value attributeMapping:(FKFormAttributeMapping *)attributeMapping {
     id convertedValue = value;
+    
+    // label value block is optional for overwriting label behavior, but mandatory for select fields
+    if(attributeMapping.labelValueBlock != nil){
+        return attributeMapping.labelValueBlock(value, self.object);
+    }
     
     if (attributeMapping.type == FKFormAttributeMappingTypeInteger) {
         NSInteger integerValue = [value integerValue];
@@ -555,11 +581,6 @@
         } else {
             convertedValue = [formatter dateFromString:value];
         }
-        
-        
-    } else if (attributeMapping.type == FKFormAttributeMappingTypeSelect) {
-        convertedValue = attributeMapping.labelValueBlock(value, self.object);
-        
     }
     
     return convertedValue;
@@ -574,6 +595,12 @@
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 - (id)valueOfObjectForKeyPath:(NSString *)keyPath {
+    
+    if(keyPath == nil){
+        NSLog(@"Error FormKitFormMapping nil keyPath object name %@",
+              keyPath, NSStringFromClass([self.object class]));
+        return nil;
+    }
     id value = nil;
     
     @try {
@@ -684,6 +711,15 @@
     [self setValue:[NSNumber numberWithBool:sender.isOn] forAttributeMapping:sender.formAttributeMapping];
 }
 
+
+- (void) enbaleDisableSwitchFieldValueDidChange: (UISwitch*) sender
+{
+    BOOL isOn = [sender isOn];
+    FKFormAttributeMapping* mapping = [sender formAttributeMapping];
+    if(mapping.optionalMappingEnableDisableBlock){
+        mapping.optionalMappingEnableDisableBlock(self.object, mapping.attribute, isOn);
+    }
+}
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 - (void)sliderFieldValueDidChange:(UISlider *)sender {
