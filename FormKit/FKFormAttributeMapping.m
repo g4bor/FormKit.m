@@ -59,6 +59,11 @@
     } else {
         self.keyboardType = UIKeyboardTypeDefault;
     }
+    
+    if (FKFormAttributeMappingTypePassword == type) {
+        self.autocapitalizationType = UITextAutocapitalizationTypeNone;
+        self.autocorrectionType = UITextAutocorrectionTypeNo;
+    }
 }
 
 
