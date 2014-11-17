@@ -155,7 +155,7 @@
         [self showTextViewControllerWithAttributeMapping:attributeMapping];
         
     } else if (FKFormAttributeMappingTypeText == attributeMapping.type) {
-        FKTextField *textFieldCell = (FKTextField *)[self cellForRowAtIndexPath:indexPath];
+        FKTextField *textFieldCell = (FKTextField *)[self.tableView cellForRowAtIndexPath:indexPath];
         [textFieldCell.textField becomeFirstResponder];
         
     } else if (FKFormAttributeMappingTypeDateTime == attributeMapping.type ||
@@ -165,7 +165,7 @@
         [self showDatePickerWithAttributeMapping:attributeMapping];
         
     } else if (FKFormAttributeMappingTypeCustomCell == attributeMapping.type) {
-        UITableViewCell *cell = [self cellForRowAtIndexPath:indexPath];
+        UITableViewCell *cell = [self.tableView cellForRowAtIndexPath:indexPath];
         
         if (nil != attributeMapping.cellSelectionBlock) {
             attributeMapping.cellSelectionBlock(cell, self.object, indexPath);
