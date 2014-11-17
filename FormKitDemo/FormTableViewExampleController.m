@@ -36,6 +36,8 @@
 - (void)viewDidLoad {
     [super viewDidLoad];
     
+    self.tableView.keyboardDismissMode = UIScrollViewKeyboardDismissModeOnDrag;
+    
     self.formModel = [FKFormModel formTableModelForTableView:self.tableView
                                         navigationController:self.navigationController];
     
