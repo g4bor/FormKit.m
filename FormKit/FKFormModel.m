@@ -154,7 +154,10 @@
     } else if (FKFormAttributeMappingTypeBigText == attributeMapping.type) {
         [self showTextViewControllerWithAttributeMapping:attributeMapping];
         
-    } else if (FKFormAttributeMappingTypeText == attributeMapping.type) {
+    } else if (FKFormAttributeMappingTypeText == attributeMapping.type ||
+               FKFormAttributeMappingTypePassword == attributeMapping.type ||
+               FKFormAttributeMappingTypeInteger == attributeMapping.type ||
+               FKFormAttributeMappingTypeFloat == attributeMapping.type) {
         FKTextField *textFieldCell = (FKTextField *)[self.tableView cellForRowAtIndexPath:indexPath];
         [textFieldCell.textField becomeFirstResponder];
         
