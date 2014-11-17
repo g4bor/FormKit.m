@@ -393,6 +393,9 @@
     if (type == FKFormAttributeMappingTypeText) {
         return _formMapping.textFieldClass;
         
+    } else if (type == FKFormAttributeMappingTypeEmail) {
+        return _formMapping.textFieldClass;
+        
     } else if (type == FKFormAttributeMappingTypeFloat) {
         return _formMapping.floatFieldClass;
         

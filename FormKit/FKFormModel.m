@@ -155,6 +155,7 @@
         [self showTextViewControllerWithAttributeMapping:attributeMapping];
         
     } else if (FKFormAttributeMappingTypeText == attributeMapping.type ||
+               FKFormAttributeMappingTypeEmail == attributeMapping.type ||
                FKFormAttributeMappingTypePassword == attributeMapping.type ||
                FKFormAttributeMappingTypeInteger == attributeMapping.type ||
                FKFormAttributeMappingTypeFloat == attributeMapping.type) {

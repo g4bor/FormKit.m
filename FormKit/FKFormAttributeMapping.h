@@ -37,7 +37,8 @@ typedef enum {
     FKFormAttributeMappingTypeSelect = 14,
     FKFormAttributeMappingTypeCustomCell = 15,
     FKFormAttributeMappingTypeSlider = 16,
-    FKFormAttributeMappingTypeSeparator = 17
+    FKFormAttributeMappingTypeSeparator = 17,
+    FKFormAttributeMappingTypeEmail = 18,
 } FKFormAttributeMappingType;
 
 @interface FKFormAttributeMapping : NSObject

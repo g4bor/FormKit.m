@@ -55,12 +55,15 @@
         self.keyboardType = UIKeyboardTypeDecimalPad;
     } else if (FKFormAttributeMappingTypeInteger == type) {
         self.keyboardType = UIKeyboardTypeNumberPad;
+    } else if (FKFormAttributeMappingTypeEmail == type) {
+        self.keyboardType = UIKeyboardTypeEmailAddress;
         
     } else {
         self.keyboardType = UIKeyboardTypeDefault;
     }
     
-    if (FKFormAttributeMappingTypePassword == type) {
+    if (FKFormAttributeMappingTypePassword == type ||
+        FKFormAttributeMappingTypeEmail == type) {
         self.autocapitalizationType = UITextAutocapitalizationTypeNone;
         self.autocorrectionType = UITextAutocorrectionTypeNo;
     }
