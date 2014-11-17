@@ -43,8 +43,6 @@
         
         _textField = [[self.customTextFieldClass alloc] init];
         
-        self.textField.textAlignment = NSTextAlignmentRight;
-        
         [self.textField addTarget:self
                            action:@selector(textFieldDidChangeValue)
                  forControlEvents:UIControlEventAllEditingEvents];
