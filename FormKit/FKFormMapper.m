@@ -149,6 +149,7 @@
         textCell.textField.clearsOnBeginEditing = attributeMapping.clearsOnBeginEditing;
         textCell.textField.autocorrectionType = attributeMapping.autocorrectionType;
         textCell.textField.autocapitalizationType = attributeMapping.autocapitalizationType;
+        textCell.textField.keyboardType = attributeMapping.keyboardType;
         
     }
     
@@ -347,8 +348,11 @@
     
     // Value attribution
     if ([field isKindOfClass:[FKTextField class]]) {
-        [(FKTextField *)field textField].text = convertedValue;
-        [(FKTextField *)field textField].placeholder = attributeMapping.placeholderText;
+        UITextField *textField = [(FKTextField *)field textField];
+        textField.text = convertedValue;
+        textField.placeholder = attributeMapping.placeholderText;
+        textField.delegate = self;
+        textField.formAttributeMapping = attributeMapping;
         
     } else if ([field isKindOfClass:[FKSwitchField class]]) {
         UISwitch *switchControl = [(FKSwitchField *)field switchControl];
@@ -393,6 +397,9 @@
     FKFormAttributeMappingType type = attributeMapping.type;
     
     if (type == FKFormAttributeMappingTypeText) {
+        return _formMapping.textFieldClass;
+        
+    } else if (type == FKFormAttributeMappingTypeEmail) {
         return _formMapping.textFieldClass;
         
     } else if (type == FKFormAttributeMappingTypeFloat) {
@@ -451,7 +458,6 @@
 - (FKSimpleField *)cellWithAttributeMapping:(FKFormAttributeMapping *)attributeMapping
                                 sourceClass:(Class)sourceClass {
     
-    FKFormAttributeMappingType type = attributeMapping.type;
     Class cellClass = [self cellClassWithAttributeMapping:attributeMapping];
     FKSimpleField *field = [self cellForClass:cellClass];
     if([field isKindOfClass: FKSimpleField.class]){
@@ -462,55 +468,6 @@
             [field.usageSwitch addTarget: self action: @selector(enbaleDisableSwitchFieldValueDidChange:) forControlEvents: UIControlEventValueChanged];
         }
     }
-   
-    
-    if (type == FKFormAttributeMappingTypeText) {
-        [[(FKTextField *)field textField] setDelegate:self];
-        [[(FKTextField *)field textField] setFormAttributeMapping:attributeMapping];
-        [[(FKTextField *)field textField] setKeyboardType:attributeMapping.keyboardType];
-        
-    } else if (type == FKFormAttributeMappingTypeFloat) {
-        [[(FKFloatField *)field textField] setDelegate:self];
-        [[(FKFloatField *)field textField] setFormAttributeMapping:attributeMapping];
-        [[(FKFloatField *)field textField] setKeyboardType:attributeMapping.keyboardType];
-        
-    } else if (type == FKFormAttributeMappingTypeInteger) {
-        [[(FKIntegerField *)field textField] setDelegate:self];
-        [[(FKIntegerField *)field textField] setFormAttributeMapping:attributeMapping];
-        [[(FKIntegerField *)field textField] setKeyboardType:attributeMapping.keyboardType];
-        
-    } else if (type == FKFormAttributeMappingTypeLabel) {
-        
-    } else if (type == FKFormAttributeMappingTypePassword) {
-        [[(FKPasswordTextField *)field textField] setDelegate:self];
-        [[(FKPasswordTextField *)field textField] setFormAttributeMapping:attributeMapping];
-        [[(FKPasswordTextField *)field textField] setKeyboardType:attributeMapping.keyboardType];
-        
-    } else if (type == FKFormAttributeMappingTypeBoolean) {
-        
-    } else if (type == FKFormAttributeMappingTypeSaveButton) {
-        
-    } else if (type == FKFormAttributeMappingTypeButton) {
-        
-    } else if ((type == FKFormAttributeMappingTypeSelect && attributeMapping.showInPicker) ||
-               (type == FKFormAttributeMappingTypeMultiSelect && attributeMapping.showInPicker) ||
-               type == FKFormAttributeMappingTypeTime ||
-               type == FKFormAttributeMappingTypeDate ||
-               type == FKFormAttributeMappingTypeDateTime) {
-        
-    } else if ((type == FKFormAttributeMappingTypeSelect && !attributeMapping.showInPicker) ||
-               (type == FKFormAttributeMappingTypeMultiSelect && attributeMapping.showInPicker)){
-        
-    } else if (type == FKFormAttributeMappingTypeBigText) {
-        
-    } else if (type == FKFormAttributeMappingTypeCustomCell) {
-        
-    } else if (type == FKFormAttributeMappingTypeSlider) {
-        
-    } else if (type == FKFormAttributeMappingTypeSeparator) {
-        
-    }
-    
     return field;
 }
 
@@ -682,9 +639,6 @@
     }
     
     CGFloat rowHeight = attributeMapping.rowHeight > 0 ? attributeMapping.rowHeight : self.tableView.rowHeight;
-    if (rowHeight == UITableViewAutomaticDimension) {
-        rowHeight = 44;
-    }
     
     if ([self.formModel.invalidAttributes containsObject:attributeMapping.attribute] &&
         nil != attributeValidation.errorMessageBlock) {
@@ -692,6 +646,9 @@
         Class<FKFieldErrorProtocol> cellClass = [self cellClassWithAttributeMapping:attributeMapping];
         id value = [self valueForAttributeMapping:attributeMapping];
         
+        if (rowHeight == UITableViewAutomaticDimension) {
+            rowHeight = 44;
+        }
         rowHeight += [cellClass errorHeightWithError:attributeValidation.errorMessageBlock(value, self.object)
                                            tableView:self.tableView];
     }

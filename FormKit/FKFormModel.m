@@ -159,8 +159,12 @@
     } else if (FKFormAttributeMappingTypeBigText == attributeMapping.type) {
         [self showTextViewControllerWithAttributeMapping:attributeMapping];
         
-    } else if (FKFormAttributeMappingTypeText == attributeMapping.type) {
-        FKTextField *textFieldCell = (FKTextField *)[self cellForRowAtIndexPath:indexPath];
+    } else if (FKFormAttributeMappingTypeText == attributeMapping.type ||
+               FKFormAttributeMappingTypeEmail == attributeMapping.type ||
+               FKFormAttributeMappingTypePassword == attributeMapping.type ||
+               FKFormAttributeMappingTypeInteger == attributeMapping.type ||
+               FKFormAttributeMappingTypeFloat == attributeMapping.type) {
+        FKTextField *textFieldCell = (FKTextField *)[self.tableView cellForRowAtIndexPath:indexPath];
         [textFieldCell.textField becomeFirstResponder];
         
     } else if (FKFormAttributeMappingTypeDateTime == attributeMapping.type ||
@@ -170,7 +174,7 @@
         [self showDatePickerWithAttributeMapping:attributeMapping];
         
     } else if (FKFormAttributeMappingTypeCustomCell == attributeMapping.type) {
-        UITableViewCell *cell = [self cellForRowAtIndexPath:indexPath];
+        UITableViewCell *cell = [self.tableView cellForRowAtIndexPath:indexPath];
         
         if (nil != attributeMapping.cellSelectionBlock) {
             attributeMapping.cellSelectionBlock(cell, self.object, indexPath);
@@ -468,18 +472,6 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
     [self didSelectRowAtIndexPath:indexPath];
-}
-
-
-////////////////////////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////////////////////////
-#pragma mark -
-#pragma mark UIScrollViewDelegate
-
-
-////////////////////////////////////////////////////////////////////////////////////////////////////
-- (void)scrollViewWillBeginDragging:(UIScrollView *)scrollView {
-    [[[[UIApplication sharedApplication] keyWindow] fk_findFirstResponder] resignFirstResponder];
 }
 
 
